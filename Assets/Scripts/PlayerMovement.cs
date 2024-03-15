@@ -7,13 +7,13 @@ using UnityEngine.UIElements;
 public class PlayerMovement : MonoBehaviour
 {
     // Components
-    public Rigidbody2D Rb { get; private set; }
-    public Vector2     boxExtends;
-    public bool        IsFacingRight { get; private set; }
-    public bool        IsJumping { get; private set; }
-    public float       LastOnGroundTime { get; private set; }
-    public Vector2     moveInput;
-    public float       LastPressedJumpTime { get; private set; }
+    private Rigidbody2D Rb { get; set; }
+    public Vector2 boxExtends;
+    public bool IsFacingRight { get; private set; }
+    public bool IsJumping { get; private set; }
+    private float LastOnGroundTime { get; set; }
+    public Vector2 moveInput;
+    private float LastPressedJumpTime { get; set; }
     
     // Running
     [Space] [Header("Running Variables")]
@@ -72,10 +72,10 @@ public class PlayerMovement : MonoBehaviour
 
     private static void Run()
     {
-        float targetSpeed = moveImpu
+        float targetSpeed;
     }
 
-    public void SetGravityScale(float scale)
+    private void SetGravityScale(float scale)
     {
         Rb.gravityScale = scale;
     }
