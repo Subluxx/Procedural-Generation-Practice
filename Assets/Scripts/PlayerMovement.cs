@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 
 public class PlayerMovement : MonoBehaviour
@@ -51,6 +50,8 @@ public class PlayerMovement : MonoBehaviour
     [Space] [Header("Other Variables")] 
     [Range(0.01f, 0.5f)] public float jumpInputBufferTime;
     [Range(0.01f, 0.5f)] public float coyoteTime;
+    public float dashMultiplier;
+    public float dashCooldown;
 
     // Start is called before the first frame update
     private void Start()
@@ -71,14 +72,19 @@ public class PlayerMovement : MonoBehaviour
     {
         LastOnGroundTime -= Time.deltaTime;
         LastPressedJumpTime -= Time.deltaTime;
+        dashCooldown -= Time.deltaTime;
         moveInput.x = Input.GetAxisRaw("Horizontal");
         moveInput.y = Input.GetAxisRaw("Vertical");
-        float xSpeed = Mathf.Abs(Rb.velocity.x);
-        float ySpeed = Mathf.Abs(Rb.velocity.y);
         
         if (moveInput.x != 0) CheckDirection(moveInput.x > 0);
         
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W)) OnJumpInput();
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldown < 0f)
+        {
+            dashCooldown = 0f;
+            Rb.AddForce(dashMultiplier * Vector2.right, ForceMode2D.Impulse);
+        }
         
         //ground checks
         if (!IsJumping)
