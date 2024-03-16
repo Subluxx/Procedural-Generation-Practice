@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class PlayerMovement : MonoBehaviour
 {
@@ -6,7 +7,9 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody2D Rb { get; set; }
     public Vector2 boxExtends;
     private bool IsFacingRight { get; set; }
-    public bool IsJumping { get; private set; }
+    private bool IsJumping { get; set; }
+    private bool IsDashing { get; set; }
+    private float LastPressedDashTime { get; set; }
     private float LastOnGroundTime { get; set; }
     public Vector2 moveInput;
     private float LastPressedJumpTime { get; set; }
@@ -50,9 +53,11 @@ public class PlayerMovement : MonoBehaviour
     [Space] [Header("Other Variables")] 
     [Range(0.01f, 0.5f)] public float jumpInputBufferTime;
     [Range(0.01f, 0.5f)] public float coyoteTime;
-    public float dashMultiplier;
-    public float dashCooldown;
-
+    
+    //dashing
+    public float dashForce;
+    public float dashInputBufferTime;
+ 
     // Start is called before the first frame update
     private void Start()
     {
@@ -72,7 +77,7 @@ public class PlayerMovement : MonoBehaviour
     {
         LastOnGroundTime -= Time.deltaTime;
         LastPressedJumpTime -= Time.deltaTime;
-        dashCooldown -= Time.deltaTime;
+        LastPressedDashTime -= Time.deltaTime;
         moveInput.x = Input.GetAxisRaw("Horizontal");
         moveInput.y = Input.GetAxisRaw("Vertical");
         
@@ -80,11 +85,8 @@ public class PlayerMovement : MonoBehaviour
         
         if (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.W)) OnJumpInput();
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && dashCooldown < 0f)
-        {
-            dashCooldown = 0f;
-            Rb.AddForce(dashMultiplier * Vector2.right, ForceMode2D.Impulse);
-        }
+        //dash code
+        if (Input.GetKeyDown(KeyCode.LeftShift)) OnDashInput();
         
         //ground checks
         if (!IsJumping)
@@ -116,6 +118,13 @@ public class PlayerMovement : MonoBehaviour
             _jumpCut = false;
             _jumpFalling = false;
             Jump();
+        }
+        
+        //dash checks
+        if (CanDash() && LastPressedDashTime > 0)
+        {
+            IsDashing = true;
+            Dash();
         }
         
         //gravity checks for jumping
@@ -182,6 +191,23 @@ public class PlayerMovement : MonoBehaviour
         
         Rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
     }
+
+    private void Dash()
+    {
+        LastPressedDashTime = 0f;
+        float force = dashForce;
+
+        if (Rb.velocity.x > 0)
+        {
+            force *= 1;
+        }
+        else if (Rb.velocity.x < 0)
+        {
+            force *= -1;
+        }
+        
+        Rb.AddForce(Vector2.right * force, ForceMode2D.Impulse);
+    }
     private void OnJumpInput()
     {
         LastPressedJumpTime = jumpInputBufferTime;
@@ -202,10 +228,21 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isMovingRight != IsFacingRight) Turn();
     }
-    private bool CanJump() {
+    private bool CanJump()
+    {
         return LastOnGroundTime > 0 && !IsJumping;
     }
-    private bool CanJumpCut() {
+
+    private void OnDashInput()
+    {
+        LastPressedDashTime = dashInputBufferTime;
+    }
+    private bool CanDash()
+    {
+        return LastPressedDashTime > 0 && !IsDashing;
+    }
+    private bool CanJumpCut() 
+    {
         return IsJumping && Rb.velocity.y > 0;
     }
     private bool GroundCheck()
